@@ -421,13 +421,74 @@ function App() {
 
     const question = quizQuestions[currentIndex]
 
+    const jumpToQuestion = (index) => {
+      setCurrentIndex(index)
+      if (quizAnswers[index]) {
+        setSelectedAnswer(quizAnswers[index].selected)
+      } else {
+        setSelectedAnswer(null)
+      }
+      saveQuizState(index, score, quizAnswers)
+    }
+
     return (
       <div>
         <div className="progress-bar">
           <div 
             className="progress-fill" 
-            style={{width: `${((currentIndex + 1) / quizQuestions.length) * 100}%`}}
+            style={{width: `${(quizAnswers.length / quizQuestions.length) * 100}%`}}
           />
+        </div>
+
+        {/* Question Navigator Grid */}
+        <div style={{
+          marginBottom: '20px',
+          padding: '15px',
+          background: '#f8f9fa',
+          borderRadius: '12px'
+        }}>
+          <h4 style={{marginBottom: '10px', fontSize: '0.9rem', color: '#666'}}>
+            Jump to Question ({quizAnswers.length}/{quizQuestions.length} answered):
+          </h4>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(45px, 1fr))',
+            gap: '8px'
+          }}>
+            {quizQuestions.map((_, idx) => {
+              const isAnswered = quizAnswers[idx] !== undefined
+              const isCurrent = idx === currentIndex
+              const isCorrect = isAnswered && quizAnswers[idx].correct
+              
+              return (
+                <button
+                  key={idx}
+                  onClick={() => jumpToQuestion(idx)}
+                  style={{
+                    padding: '10px',
+                    border: isCurrent ? '3px solid #8b5cf6' : '2px solid #e5e7eb',
+                    borderRadius: '8px',
+                    background: isAnswered 
+                      ? (isCorrect ? '#d1fae5' : '#fee2e2')
+                      : 'white',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    fontWeight: isCurrent ? 'bold' : 'normal',
+                    color: isCurrent ? '#8b5cf6' : '#333',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isCurrent) e.target.style.transform = 'scale(1.05)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'scale(1)'
+                  }}
+                >
+                  {idx + 1}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         <div className="quiz-question">
