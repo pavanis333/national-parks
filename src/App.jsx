@@ -102,8 +102,32 @@ function App() {
   }
 
   const handleQuizAnswer = (answerIndex) => {
-    if (selectedAnswer !== null) return
+    // Allow changing answer before moving to next question
+    if (quizAnswers[currentIndex]) {
+      // Already answered this question, update the answer
+      const newAnswers = [...quizAnswers]
+      const correct = quizQuestions[currentIndex].correct === answerIndex
+      
+      // Update score
+      const oldCorrect = newAnswers[currentIndex].correct
+      let newScore = score
+      if (oldCorrect && !correct) newScore-- // Was correct, now wrong
+      if (!oldCorrect && correct) newScore++ // Was wrong, now correct
+      
+      newAnswers[currentIndex] = {
+        question: currentIndex,
+        selected: answerIndex,
+        correct: correct
+      }
+      
+      setQuizAnswers(newAnswers)
+      setScore(newScore)
+      setSelectedAnswer(answerIndex)
+      saveQuizState(currentIndex, newScore, newAnswers)
+      return
+    }
     
+    // First time answering this question
     setSelectedAnswer(answerIndex)
     const correct = quizQuestions[currentIndex].correct === answerIndex
     
@@ -119,19 +143,39 @@ function App() {
     }
     
     setQuizAnswers(newAnswers)
+    saveQuizState(currentIndex, newScore, newAnswers)
+  }
 
-    setTimeout(() => {
-      if (currentIndex < quizQuestions.length - 1) {
-        const nextIndex = currentIndex + 1
-        setCurrentIndex(nextIndex)
-        setSelectedAnswer(null)
-        // Save progress
-        saveQuizState(nextIndex, newScore, newAnswers)
+  const nextQuizQuestion = () => {
+    if (currentIndex < quizQuestions.length - 1) {
+      const nextIndex = currentIndex + 1
+      setCurrentIndex(nextIndex)
+      // Load previous answer if exists
+      if (quizAnswers[nextIndex]) {
+        setSelectedAnswer(quizAnswers[nextIndex].selected)
       } else {
-        setShowResult(true)
-        localStorage.removeItem('npQuizState') // Clear quiz state on completion
+        setSelectedAnswer(null)
       }
-    }, 2000)
+      saveQuizState(nextIndex, score, quizAnswers)
+    } else if (quizAnswers.length === quizQuestions.length) {
+      // All questions answered, show result
+      setShowResult(true)
+      localStorage.removeItem('npQuizState')
+    }
+  }
+
+  const prevQuizQuestion = () => {
+    if (currentIndex > 0) {
+      const prevIndex = currentIndex - 1
+      setCurrentIndex(prevIndex)
+      // Load previous answer
+      if (quizAnswers[prevIndex]) {
+        setSelectedAnswer(quizAnswers[prevIndex].selected)
+      } else {
+        setSelectedAnswer(null)
+      }
+      saveQuizState(prevIndex, score, quizAnswers)
+    }
   }
 
   const getFilteredParks = () => {
@@ -431,10 +475,28 @@ function App() {
         </div>
 
         <div style={{textAlign: 'center', marginTop: '20px', color: '#666'}}>
-          Score: {score} / {currentIndex + (selectedAnswer !== null ? 1 : 0)}
+          Score: {score} / {quizAnswers.length}
         </div>
 
         <div className="controls" style={{marginTop: '20px'}}>
+          <button 
+            className="btn btn-secondary" 
+            onClick={prevQuizQuestion}
+            disabled={currentIndex === 0}
+          >
+            ⬅️ Previous
+          </button>
+          
+          <button 
+            className="btn btn-primary" 
+            onClick={nextQuizQuestion}
+            disabled={currentIndex === quizQuestions.length - 1 && quizAnswers.length < quizQuestions.length}
+          >
+            {currentIndex === quizQuestions.length - 1 && quizAnswers.length === quizQuestions.length ? '✓ Finish Quiz' : 'Next ➡️'}
+          </button>
+        </div>
+
+        <div className="controls" style={{marginTop: '10px'}}>
           <button className="btn btn-secondary" onClick={resetQuiz}>
             🔄 Reset Quiz
           </button>
