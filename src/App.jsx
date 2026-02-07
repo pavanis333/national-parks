@@ -12,6 +12,8 @@ function App() {
   const [filter, setFilter] = useState('all')
   const [masteredCards, setMasteredCards] = useState([])
   const [showNavigator, setShowNavigator] = useState(false)
+  const [showCardNavigator, setShowCardNavigator] = useState(false)
+  const [cardNavTab, setCardNavTab] = useState('all')
 
   useEffect(() => {
     // Load progress from localStorage
@@ -315,6 +317,296 @@ function App() {
             style={{width: `${((currentIndex + 1) / parks.length) * 100}%`}}
           />
         </div>
+
+        {/* Card Navigator Button */}
+        <div style={{textAlign: 'center', margin: '15px 0'}}>
+          <button 
+            className="btn btn-secondary"
+            onClick={() => setShowCardNavigator(true)}
+            style={{fontSize: '0.95rem'}}
+          >
+            🗂️ Card Navigator ({masteredCards.length}/{nationalParksData.length} mastered)
+          </button>
+        </div>
+
+        {/* Card Navigator Modal */}
+        {showCardNavigator && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }} onClick={() => setShowCardNavigator(false)}>
+            <div style={{
+              background: 'white',
+              borderRadius: '16px',
+              padding: '30px',
+              maxWidth: '800px',
+              maxHeight: '85vh',
+              overflow: 'auto',
+              width: '100%',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.3)'
+            }} onClick={(e) => e.stopPropagation()}>
+              
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '20px'
+              }}>
+                <h3 style={{margin: 0}}>Card Navigator</h3>
+                <button 
+                  onClick={() => setShowCardNavigator(false)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '1.5rem',
+                    cursor: 'pointer',
+                    padding: '5px 10px'
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Tabs */}
+              <div style={{
+                display: 'flex',
+                gap: '10px',
+                marginBottom: '20px',
+                borderBottom: '2px solid #e5e7eb'
+              }}>
+                <button
+                  onClick={() => setCardNavTab('all')}
+                  style={{
+                    padding: '10px 20px',
+                    background: 'none',
+                    border: 'none',
+                    borderBottom: cardNavTab === 'all' ? '3px solid #8b5cf6' : '3px solid transparent',
+                    cursor: 'pointer',
+                    fontWeight: cardNavTab === 'all' ? 'bold' : 'normal',
+                    color: cardNavTab === 'all' ? '#8b5cf6' : '#666',
+                    fontSize: '0.95rem'
+                  }}
+                >
+                  All Parks
+                </button>
+                <button
+                  onClick={() => setCardNavTab('state')}
+                  style={{
+                    padding: '10px 20px',
+                    background: 'none',
+                    border: 'none',
+                    borderBottom: cardNavTab === 'state' ? '3px solid #8b5cf6' : '3px solid transparent',
+                    cursor: 'pointer',
+                    fontWeight: cardNavTab === 'state' ? 'bold' : 'normal',
+                    color: cardNavTab === 'state' ? '#8b5cf6' : '#666',
+                    fontSize: '0.95rem'
+                  }}
+                >
+                  By State
+                </button>
+                <button
+                  onClick={() => setCardNavTab('unmastered')}
+                  style={{
+                    padding: '10px 20px',
+                    background: 'none',
+                    border: 'none',
+                    borderBottom: cardNavTab === 'unmastered' ? '3px solid #8b5cf6' : '3px solid transparent',
+                    cursor: 'pointer',
+                    fontWeight: cardNavTab === 'unmastered' ? 'bold' : 'normal',
+                    color: cardNavTab === 'unmastered' ? '#8b5cf6' : '#666',
+                    fontSize: '0.95rem'
+                  }}
+                >
+                  Unmastered Only
+                </button>
+              </div>
+
+              {/* Tab Content */}
+              <div style={{maxHeight: '50vh', overflow: 'auto'}}>
+                {/* All Parks Tab */}
+                {cardNavTab === 'all' && (
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                    {nationalParksData.map((p, idx) => {
+                      const isMastered = masteredCards.includes(p.name)
+                      const isCurrent = parks[currentIndex]?.name === p.name
+                      return (
+                        <div
+                          key={idx}
+                          onClick={() => {
+                            const parkIndex = parks.findIndex(park => park.name === p.name)
+                            if (parkIndex !== -1) {
+                              setCurrentIndex(parkIndex)
+                              setFlipped(false)
+                              setShowCardNavigator(false)
+                            }
+                          }}
+                          style={{
+                            padding: '12px 15px',
+                            background: isCurrent ? '#e9d5ff' : (isMastered ? '#d1fae5' : 'white'),
+                            border: isCurrent ? '2px solid #8b5cf6' : '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isCurrent) e.currentTarget.style.background = '#f3f4f6'
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isCurrent) e.currentTarget.style.background = isMastered ? '#d1fae5' : 'white'
+                          }}
+                        >
+                          <div>
+                            <strong>{p.name}</strong>
+                            <div style={{fontSize: '0.85rem', color: '#666'}}>{p.state}</div>
+                          </div>
+                          {isMastered && <span style={{fontSize: '1.2rem'}}>✓</span>}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {/* By State Tab */}
+                {cardNavTab === 'state' && (() => {
+                  const byState = {}
+                  nationalParksData.forEach(p => {
+                    if (!byState[p.state]) byState[p.state] = []
+                    byState[p.state].push(p)
+                  })
+                  const sortedStates = Object.keys(byState).sort()
+                  
+                  return (
+                    <div style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
+                      {sortedStates.map(state => (
+                        <div key={state}>
+                          <h4 style={{
+                            marginBottom: '8px',
+                            color: '#8b5cf6',
+                            fontSize: '1rem',
+                            fontWeight: 'bold'
+                          }}>
+                            {state} ({byState[state].length})
+                          </h4>
+                          <div style={{display: 'flex', flexDirection: 'column', gap: '6px', marginLeft: '10px'}}>
+                            {byState[state].map((p, idx) => {
+                              const isMastered = masteredCards.includes(p.name)
+                              const isCurrent = parks[currentIndex]?.name === p.name
+                              return (
+                                <div
+                                  key={idx}
+                                  onClick={() => {
+                                    const parkIndex = parks.findIndex(park => park.name === p.name)
+                                    if (parkIndex !== -1) {
+                                      setCurrentIndex(parkIndex)
+                                      setFlipped(false)
+                                      setShowCardNavigator(false)
+                                    }
+                                  }}
+                                  style={{
+                                    padding: '10px 12px',
+                                    background: isCurrent ? '#e9d5ff' : (isMastered ? '#d1fae5' : 'white'),
+                                    border: isCurrent ? '2px solid #8b5cf6' : '1px solid #e5e7eb',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    fontSize: '0.9rem',
+                                    transition: 'all 0.2s'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    if (!isCurrent) e.currentTarget.style.background = '#f3f4f6'
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    if (!isCurrent) e.currentTarget.style.background = isMastered ? '#d1fae5' : 'white'
+                                  }}
+                                >
+                                  <span>{p.name}</span>
+                                  {isMastered && <span style={{fontSize: '1rem'}}>✓</span>}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })()}
+
+                {/* Unmastered Only Tab */}
+                {cardNavTab === 'unmastered' && (() => {
+                  const unmastered = nationalParksData.filter(p => !masteredCards.includes(p.name))
+                  return (
+                    <div style={{display: 'flex', flexDirection: 'column', gap: '8px'}}>
+                      {unmastered.length === 0 ? (
+                        <p style={{textAlign: 'center', color: '#666', padding: '20px'}}>
+                          🎉 Congratulations! You've mastered all cards!
+                        </p>
+                      ) : (
+                        unmastered.map((p, idx) => {
+                          const isCurrent = parks[currentIndex]?.name === p.name
+                          return (
+                            <div
+                              key={idx}
+                              onClick={() => {
+                                const parkIndex = parks.findIndex(park => park.name === p.name)
+                                if (parkIndex !== -1) {
+                                  setCurrentIndex(parkIndex)
+                                  setFlipped(false)
+                                  setShowCardNavigator(false)
+                                }
+                              }}
+                              style={{
+                                padding: '12px 15px',
+                                background: isCurrent ? '#e9d5ff' : 'white',
+                                border: isCurrent ? '2px solid #8b5cf6' : '1px solid #e5e7eb',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!isCurrent) e.currentTarget.style.background = '#f3f4f6'
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isCurrent) e.currentTarget.style.background = 'white'
+                              }}
+                            >
+                              <div>
+                                <strong>{p.name}</strong>
+                                <div style={{fontSize: '0.85rem', color: '#666'}}>{p.state}</div>
+                              </div>
+                            </div>
+                          )
+                        })
+                      )}
+                    </div>
+                  )
+                })()}
+              </div>
+
+              <div style={{marginTop: '20px', textAlign: 'center'}}>
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => setShowCardNavigator(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flashcard">
           <div 
