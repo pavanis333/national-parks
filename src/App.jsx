@@ -19,12 +19,40 @@ function App() {
       const data = JSON.parse(saved)
       setMasteredCards(data.masteredCards || [])
     }
-  }, [])
+
+    // Load quiz state from localStorage
+    const savedQuiz = localStorage.getItem('npQuizState')
+    if (savedQuiz) {
+      const quizData = JSON.parse(savedQuiz)
+      if (mode === 'quiz') {
+        setCurrentIndex(quizData.currentIndex || 0)
+        setScore(quizData.score || 0)
+        setQuizAnswers(quizData.quizAnswers || [])
+      }
+    }
+  }, [mode])
 
   const saveProgress = (mastered) => {
     localStorage.setItem('npProgress', JSON.stringify({
       masteredCards: mastered
     }))
+  }
+
+  const saveQuizState = (index, currentScore, answers) => {
+    localStorage.setItem('npQuizState', JSON.stringify({
+      currentIndex: index,
+      score: currentScore,
+      quizAnswers: answers
+    }))
+  }
+
+  const resetQuiz = () => {
+    localStorage.removeItem('npQuizState')
+    setCurrentIndex(0)
+    setScore(0)
+    setQuizAnswers([])
+    setSelectedAnswer(null)
+    setShowResult(false)
   }
 
   const resetMode = () => {
@@ -57,12 +85,20 @@ function App() {
 
   const markAsMastered = () => {
     const park = getFilteredParks()[currentIndex]
-    if (!masteredCards.includes(park.name)) {
+    
+    // Toggle mastered state
+    if (masteredCards.includes(park.name)) {
+      // Unmark/revert
+      const updated = masteredCards.filter(name => name !== park.name)
+      setMasteredCards(updated)
+      saveProgress(updated)
+    } else {
+      // Mark as mastered
       const updated = [...masteredCards, park.name]
       setMasteredCards(updated)
       saveProgress(updated)
+      nextCard()
     }
-    nextCard()
   }
 
   const handleQuizAnswer = (answerIndex) => {
@@ -71,22 +107,29 @@ function App() {
     setSelectedAnswer(answerIndex)
     const correct = quizQuestions[currentIndex].correct === answerIndex
     
-    if (correct) {
-      setScore(score + 1)
-    }
-    
-    setQuizAnswers([...quizAnswers, {
+    const newScore = correct ? score + 1 : score
+    const newAnswers = [...quizAnswers, {
       question: currentIndex,
       selected: answerIndex,
       correct: correct
-    }])
+    }]
+    
+    if (correct) {
+      setScore(newScore)
+    }
+    
+    setQuizAnswers(newAnswers)
 
     setTimeout(() => {
       if (currentIndex < quizQuestions.length - 1) {
-        setCurrentIndex(currentIndex + 1)
+        const nextIndex = currentIndex + 1
+        setCurrentIndex(nextIndex)
         setSelectedAnswer(null)
+        // Save progress
+        saveQuizState(nextIndex, newScore, newAnswers)
       } else {
         setShowResult(true)
+        localStorage.removeItem('npQuizState') // Clear quiz state on completion
       }
     }, 2000)
   }
@@ -260,9 +303,8 @@ function App() {
           <button 
             className="btn btn-primary" 
             onClick={markAsMastered}
-            disabled={masteredCards.includes(park.name)}
           >
-            {masteredCards.includes(park.name) ? '✅ Mastered' : '✓ Mark as Mastered'}
+            {masteredCards.includes(park.name) ? '✓ Mastered (click to unmark)' : '✓ Mark as Mastered'}
           </button>
           
           <button 
@@ -390,6 +432,15 @@ function App() {
 
         <div style={{textAlign: 'center', marginTop: '20px', color: '#666'}}>
           Score: {score} / {currentIndex + (selectedAnswer !== null ? 1 : 0)}
+        </div>
+
+        <div className="controls" style={{marginTop: '20px'}}>
+          <button className="btn btn-secondary" onClick={resetQuiz}>
+            🔄 Reset Quiz
+          </button>
+          <button className="btn btn-secondary" onClick={resetMode}>
+            🏠 Back to Home
+          </button>
         </div>
       </div>
     )
