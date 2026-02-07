@@ -11,6 +11,7 @@ function App() {
   const [showResult, setShowResult] = useState(false)
   const [filter, setFilter] = useState('all')
   const [masteredCards, setMasteredCards] = useState([])
+  const [showNavigator, setShowNavigator] = useState(false)
 
   useEffect(() => {
     // Load progress from localStorage
@@ -429,6 +430,7 @@ function App() {
         setSelectedAnswer(null)
       }
       saveQuizState(index, score, quizAnswers)
+      setShowNavigator(false) // Close modal after selecting
     }
 
     return (
@@ -440,56 +442,145 @@ function App() {
           />
         </div>
 
-        {/* Question Navigator Grid */}
-        <div style={{
-          marginBottom: '20px',
-          padding: '15px',
-          background: '#f8f9fa',
-          borderRadius: '12px'
-        }}>
-          <h4 style={{marginBottom: '10px', fontSize: '0.9rem', color: '#666'}}>
-            Jump to Question ({quizAnswers.length}/{quizQuestions.length} answered):
-          </h4>
+        {/* Navigator Button */}
+        <div style={{textAlign: 'center', margin: '15px 0'}}>
+          <button 
+            className="btn btn-secondary"
+            onClick={() => setShowNavigator(true)}
+            style={{fontSize: '0.95rem'}}
+          >
+            📋 Question Navigator ({quizAnswers.length}/{quizQuestions.length})
+          </button>
+        </div>
+
+        {/* Modal Overlay */}
+        {showNavigator && (
           <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(45px, 1fr))',
-            gap: '8px'
-          }}>
-            {quizQuestions.map((_, idx) => {
-              const isAnswered = quizAnswers[idx] !== undefined
-              const isCurrent = idx === currentIndex
-              const isCorrect = isAnswered && quizAnswers[idx].correct
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }} onClick={() => setShowNavigator(false)}>
+            <div style={{
+              background: 'white',
+              borderRadius: '16px',
+              padding: '30px',
+              maxWidth: '700px',
+              maxHeight: '80vh',
+              overflow: 'auto',
+              width: '100%',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.3)'
+            }} onClick={(e) => e.stopPropagation()}>
               
-              return (
-                <button
-                  key={idx}
-                  onClick={() => jumpToQuestion(idx)}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '20px'
+              }}>
+                <h3 style={{margin: 0}}>Question Navigator</h3>
+                <button 
+                  onClick={() => setShowNavigator(false)}
                   style={{
-                    padding: '10px',
-                    border: isCurrent ? '3px solid #8b5cf6' : '2px solid #e5e7eb',
-                    borderRadius: '8px',
-                    background: isAnswered 
-                      ? (isCorrect ? '#d1fae5' : '#fee2e2')
-                      : 'white',
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '1.5rem',
                     cursor: 'pointer',
-                    fontSize: '0.9rem',
-                    fontWeight: isCurrent ? 'bold' : 'normal',
-                    color: isCurrent ? '#8b5cf6' : '#333',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isCurrent) e.target.style.transform = 'scale(1.05)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.transform = 'scale(1)'
+                    padding: '5px 10px'
                   }}
                 >
-                  {idx + 1}
+                  ✕
                 </button>
-              )
-            })}
+              </div>
+
+              <div style={{
+                display: 'flex',
+                gap: '15px',
+                marginBottom: '20px',
+                fontSize: '0.9rem',
+                flexWrap: 'wrap'
+              }}>
+                <div style={{display: 'flex', alignItems: 'center', gap: '5px'}}>
+                  <div style={{width: '20px', height: '20px', background: '#d1fae5', border: '2px solid #10b981', borderRadius: '4px'}}></div>
+                  <span>Correct</span>
+                </div>
+                <div style={{display: 'flex', alignItems: 'center', gap: '5px'}}>
+                  <div style={{width: '20px', height: '20px', background: '#fee2e2', border: '2px solid #ef4444', borderRadius: '4px'}}></div>
+                  <span>Wrong</span>
+                </div>
+                <div style={{display: 'flex', alignItems: 'center', gap: '5px'}}>
+                  <div style={{width: '20px', height: '20px', background: 'white', border: '2px solid #e5e7eb', borderRadius: '4px'}}></div>
+                  <span>Unanswered</span>
+                </div>
+                <div style={{display: 'flex', alignItems: 'center', gap: '5px'}}>
+                  <div style={{width: '20px', height: '20px', background: '#e9d5ff', border: '3px solid #8b5cf6', borderRadius: '4px'}}></div>
+                  <span>Current</span>
+                </div>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(50px, 1fr))',
+                gap: '10px'
+              }}>
+                {quizQuestions.map((_, idx) => {
+                  const isAnswered = quizAnswers[idx] !== undefined
+                  const isCurrent = idx === currentIndex
+                  const isCorrect = isAnswered && quizAnswers[idx].correct
+                  
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => jumpToQuestion(idx)}
+                      style={{
+                        padding: '12px',
+                        border: isCurrent ? '3px solid #8b5cf6' : '2px solid #e5e7eb',
+                        borderRadius: '8px',
+                        background: isCurrent 
+                          ? '#e9d5ff'
+                          : isAnswered 
+                            ? (isCorrect ? '#d1fae5' : '#fee2e2')
+                            : 'white',
+                        cursor: 'pointer',
+                        fontSize: '1rem',
+                        fontWeight: isCurrent ? 'bold' : 'normal',
+                        color: '#333',
+                        transition: 'all 0.2s',
+                        borderColor: isAnswered && !isCurrent
+                          ? (isCorrect ? '#10b981' : '#ef4444')
+                          : (isCurrent ? '#8b5cf6' : '#e5e7eb')
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.transform = 'scale(1.05)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.transform = 'scale(1)'
+                      }}
+                    >
+                      {idx + 1}
+                    </button>
+                  )
+                })}
+              </div>
+
+              <div style={{marginTop: '20px', textAlign: 'center'}}>
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => setShowNavigator(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="quiz-question">
           <h3>Question {currentIndex + 1} of {quizQuestions.length}</h3>
