@@ -1030,8 +1030,7 @@ function App() {
 
   const renderStats = () => {
     const totalParks = nationalParksData.length
-    const unescoCount = nationalParksData.filter(p => p.category === 'unesco').length
-    const highPriority = nationalParksData.filter(p => p.importance === 'HIGH').length
+    const counts = getFilterCounts()
     const masteredCount = masteredCards.length
     const progress = ((masteredCount / totalParks) * 100).toFixed(0)
 
@@ -1045,20 +1044,16 @@ function App() {
             <div className="value">{totalParks}</div>
           </div>
           <div className="stat-card">
-            <h4>UNESCO Sites</h4>
-            <div className="value">{unescoCount}</div>
-          </div>
-          <div className="stat-card">
-            <h4>High Priority</h4>
-            <div className="value">{highPriority}</div>
-          </div>
-          <div className="stat-card">
             <h4>Mastered</h4>
-            <div className="value">{masteredCount}</div>
+            <div className="value" style={{color: '#10b981'}}>{masteredCount}</div>
+          </div>
+          <div className="stat-card">
+            <h4>Remaining</h4>
+            <div className="value" style={{color: '#ef4444'}}>{totalParks - masteredCount}</div>
           </div>
         </div>
 
-        <div style={{marginBottom: '30px'}}>
+        <div style={{marginBottom: '30px', marginTop: '30px'}}>
           <h3 style={{marginBottom: '15px', color: '#333'}}>Overall Progress</h3>
           <div className="progress-bar" style={{height: '30px'}}>
             <div 
@@ -1077,9 +1072,49 @@ function App() {
           </div>
         </div>
 
+        <h3 style={{marginBottom: '15px', color: '#333'}}>Category Breakdown</h3>
+        <div className="stats">
+          <div className="stat-card">
+            <h4>UNESCO Sites</h4>
+            <div className="value">{counts.unesco}</div>
+          </div>
+          <div className="stat-card">
+            <h4>High Priority</h4>
+            <div className="value">{counts.high}</div>
+          </div>
+          <div className="stat-card">
+            <h4>Tiger Reserves</h4>
+            <div className="value">{counts.tiger}</div>
+          </div>
+          <div className="stat-card">
+            <h4>Marine Parks</h4>
+            <div className="value">{counts.marine}</div>
+          </div>
+          <div className="stat-card">
+            <h4>Biodiversity Hotspots</h4>
+            <div className="value">{counts.biodiversity}</div>
+          </div>
+          <div className="stat-card">
+            <h4>Endangered Species</h4>
+            <div className="value">{counts.endangered}</div>
+          </div>
+          <div className="stat-card">
+            <h4>Unique Features</h4>
+            <div className="value">{counts.unique}</div>
+          </div>
+          <div className="stat-card">
+            <h4>Historic Sites</h4>
+            <div className="value">{counts.historic}</div>
+          </div>
+          <div className="stat-card">
+            <h4>Mangrove Parks</h4>
+            <div className="value">{counts.mangrove}</div>
+          </div>
+        </div>
+
         {masteredCards.length > 0 && (
-          <div>
-            <h3 style={{marginBottom: '15px', color: '#333'}}>Mastered Parks</h3>
+          <div style={{marginTop: '30px'}}>
+            <h3 style={{marginBottom: '15px', color: '#333'}}>Mastered Parks ({masteredCount})</h3>
             <div style={{display: 'flex', flexWrap: 'wrap', gap: '10px'}}>
               {masteredCards.map((name, idx) => (
                 <span key={idx} className="tag" style={{fontSize: '1rem', padding: '8px 16px'}}>
